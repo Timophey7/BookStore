@@ -1,0 +1,47 @@
+spring:
+  mail:
+    host: ${MAIL_HOST}
+    port: 1025
+    username: hello
+    password: hello
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  application:
+    name: cart-service
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
+      password: ZmRlZWRhc3Nl
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST}:29092
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/cart-service?user=${MYSQL_USER}&password=${MYSQL_PASSWORD}
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    show-sql: true
+server:
+  port: 8083
+
+library:
+  host: ${LIBRARY_HOST}
+
+eureka:
+  instance:
+    hostname: ${DISCOVERY_HOST}
+  client:
+    service-url:
+      defaultZone: http://${DISCOVERY_HOST}:8761/eureka

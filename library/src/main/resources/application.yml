@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: electronic-library
+  cache:
+    type: redis
+    cache-names: redis
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
+      password: ZmRlZWRhc3Nl
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/library?user=${MYSQL_USER}&password=${MYSQL_PASSWORD}
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    show-sql: true
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://${DISCOVERY_HOST}:8761/eureka
+logging:
+  level:
+    org:
+      springframework:
+        cache: DEBUG
+server:
+  port: 8084

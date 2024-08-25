@@ -1,0 +1,210 @@
+version: "3.7"
+
+services:
+
+    mysql-cart:
+        container_name: cart-sql
+        image: mysql/mysql-server:5.7
+        environment:
+            MYSQL_DATABASE: cart-service
+            MYSQL_ROOT_PASSWORD: test
+            MYSQL_USER: root
+            MYSQL_PASSWORD: test
+        ports:
+            - "3306:3306"
+        networks:
+            - app
+        restart: always
+
+    mysql-orders:
+        container_name: orders-sql
+        image: mysql/mysql-server:5.7
+        environment:
+            MYSQL_DATABASE: orders-service
+            MYSQL_ROOT_PASSWORD: test
+            MYSQL_USER: root
+            MYSQL_PASSWORD: test
+        ports:
+            - "3307:3307"
+        networks:
+            - app
+        restart: always
+
+    mysql-library:
+        container_name: library-sql
+        image: mysql/mysql-server:5.7
+        environment:
+            MYSQL_DATABASE: library
+            MYSQL_ROOT_PASSWORD: test
+            MYSQL_USER: root
+            MYSQL_PASSWORD: test
+        ports:
+            - "3308:3308"
+        networks:
+            - app
+        restart: always
+
+    mysql-security:
+        container_name: security-sql
+        image: mysql/mysql-server:5.7
+        environment:
+            MYSQL_DATABASE: security-service
+            MYSQL_ROOT_PASSWORD: test
+            MYSQL_USER: root
+            MYSQL_PASSWORD: test
+        ports:
+            - "3309:3309"
+        networks:
+            - app
+        restart: always
+
+    zookeeper:
+        image: confluentinc/cp-zookeeper:7.4.4
+        networks:
+            - app
+        environment:
+            ZOOKEEPER_CLIENT_PORT: 2181
+            ZOOKEEPER_TICK_TIME: 2000
+        ports:
+            - "22181:2181"
+
+    kafka:
+        image: confluentinc/cp-kafka:7.4.4
+        networks:
+            - app
+        depends_on:
+            - zookeeper
+        ports:
+            - "29092:29092"
+        environment:
+            KAFKA_BROKER_ID: 1
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://kafka:29092
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+            KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+
+    redis:
+        image: redis:7.2-rc-alpine
+        networks:
+            - app
+        container_name: redis
+        ports:
+            -   "6379:6379"
+        command: redis-server --save 20 1 --loglevel warning --requirepass ZmRlZWRhc3Nl
+        volumes:
+            - cache:/data
+        restart: always
+
+    discovery-service:
+        image: discovery-service
+        networks:
+            - app
+        ports:
+            - "8761:8761"
+
+    api-gateway:
+        image: api-gateway:latest
+        networks:
+            - app
+        environment:
+            LIBRARY_HOST: library
+            CART_HOST: cart-service
+            ORDERS_HOST: orders-service
+            SECURITY_HOST: security-service
+            DISCOVERY_HOST: discovery-service
+        container_name: api-gateway
+        ports:
+            - "8089:8089"
+        depends_on:
+            - discovery-service
+
+
+    cart-service:
+        image: cart-service:latest
+        networks:
+            - app
+        container_name: cart-service
+        ports:
+            - "8083:8083"
+        environment:
+            MAIL_HOST: localhost
+            REDIS_HOST: redis
+            MYSQL_HOST: cart-sql
+            MYSQL_PORT: 3306
+            MYSQL_USER: root
+            MYSQL_PASSWORD: test
+            KAFKA_HOST: kafka
+            LIBRARY_HOST: library
+            DISCOVERY_HOST: discovery-service
+        depends_on:
+            - discovery-service
+            - api-gateway
+            - mysql-cart
+            - kafka
+
+    orders-service:
+        image: orders-service:latest
+        networks:
+            - app
+        container_name: orders-service
+        ports:
+            - "8082:8082"
+        environment:
+            MYSQL_HOST: orders-sql
+            MYSQL_PORT: 3306
+            MYSQL_USER: root
+            MYSQL_PASSWORD: test
+            KAFKA_HOST: kafka
+            DISCOVERY_HOST: discovery-service
+            SECRET_KEY: yourKey
+        depends_on:
+            - discovery-service
+            - api-gateway
+            - mysql-orders
+            - kafka
+
+    library:
+        image: library:latest
+        networks:
+            - app
+        container_name: library
+        ports:
+            - "8084:8084"
+        environment:
+            REDIS_HOST: redis
+            MYSQL_HOST: library-sql
+            MYSQL_PORT: 3306
+            MYSQL_USER: root
+            MYSQL_PASSWORD: test
+            DISCOVERY_HOST: discovery-service
+        depends_on:
+            - discovery-service
+            - api-gateway
+            - mysql-library
+
+    security-service:
+        image: security-service:latest
+        networks:
+            - app
+        container_name: security-service
+        ports:
+            - "8085:8085"
+        environment:
+            MYSQL_HOST: security-sql
+            MYSQL_PORT: 3306
+            MYSQL_USER: root
+            MYSQL_PASSWORD: test
+            DISCOVERY_HOST: discovery-service
+        depends_on:
+            - discovery-service
+            - api-gateway
+            - mysql-security
+
+networks:
+    app:
+        driver: bridge
+
+volumes:
+    cache: {}

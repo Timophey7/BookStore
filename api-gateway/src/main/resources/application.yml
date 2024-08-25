@@ -1,0 +1,52 @@
+spring:
+  cloud:
+    loadbalancer:
+      eureka:
+        approximate-zone-from-hostname: true
+    gateway:
+      routes:
+        - id: electronic-library
+          uri:
+            http://${LIBRARY_HOST}:8084
+          predicates:
+            - Path=/v1/library/**
+
+        - id: cart-service
+          uri:
+            http://${CART_HOST}:8083
+          predicates:
+            - Path=/v1/library/**
+          filters:
+            - name: AuthenticationFilter
+
+        - id: orders-service
+          uri:
+            http://${ORDERS_HOST}:8082
+          predicates:
+            - Path=/v1/library/**
+          filters:
+            - name: AuthenticationFilter
+
+        - id: security-jwt-service
+          uri:
+            http://${SECURITY_HOST}:8085
+          predicates:
+            - Path=/v1/auth/**
+  application:
+    name: api-gateway
+
+
+eureka:
+  instance:
+    hostname: ${DISCOVERY_HOST}
+  client:
+    service-url:
+      defaultZone: http://${DISCOVERY_HOST}:8761/eureka
+
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty.http.client: DEBUG
+server:
+  port: 8089

@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: security-service
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/security-service?user=${MYSQL_USER}&password=${MYSQL_PASSWORD}
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    show-sql: true
+eureka:
+  instance:
+    hostname: ${DISCOVERY_HOST}
+  client:
+    service-url:
+      defaultZone: http://${DISCOVERY_HOST}:8761/eureka
+server:
+  port: 8085

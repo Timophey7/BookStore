@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: orders-service
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST}:29092
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/orders-service?user=${MYSQL_USER}&password=${MYSQL_PASSWORD}
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    show-sql: true
+server:
+  port: 8082
+
+eureka:
+  instance:
+    hostname: ${DISCOVERY_HOST}
+  client:
+    service-url:
+      defaultZone: http://${DISCOVERY_HOST}:8761/eureka
+
+stripe:
+  api:
+    key:
+      secret: ${SECRET_KEY}
